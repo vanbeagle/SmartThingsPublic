@@ -142,7 +142,7 @@ void dailyRun() {
     
 	if (((state?.poll["rescheduled"]?:0) + (delay * 60000)) < now()) {
 		log.info "takeAction>scheduling rescheduleIfNeeded() in ${delay} minutes.."
-//	 generate the stats every day at 0:05 
+//	 generate the stats every day at 1:00 
 		schedule("0 0 1 * * ?", rescheduleIfNeeded)    
 		// Update rescheduled state
 		state?.poll["rescheduled"] = now()
