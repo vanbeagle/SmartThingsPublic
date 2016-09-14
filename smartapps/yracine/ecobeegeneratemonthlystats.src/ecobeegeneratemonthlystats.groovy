@@ -32,7 +32,7 @@ definition(
 preferences {
 	section("About") {
 		paragraph "${get_APP_NAME()}, the smartapp that generates monthly runtime reports about your ecobee components"
-		paragraph "Version 1.1" 
+		paragraph "Version 1.5" 
 		paragraph "If you like this smartapp, please support the developer via PayPal and click on the Paypal link below " 
 			href url: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=yracine%40yahoo%2ecom&lc=US&item_name=Maisons%20ecomatiq&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest",
 				title:"Paypal donation..."
@@ -150,8 +150,8 @@ void dailyRun() {
 	settings.givenEndDate=null
 	settings.givenEndTime=null
 	if (detailedNotif) {    
-		log.debug("dailyRun>About to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
-		send ("About to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
+		log.debug("dailyRun>For $ecobee, about to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
+		send ("For $ecobee, about to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
 	}    
 	generateStats()
     
@@ -241,8 +241,8 @@ void generateStats() {
 	def component = state?.componentAlreadyProcessed
 	def nextComponent  = get_nextComponentStats(component) // get nextComponentToBeProcessed	
 	if (detailedNotif) {    
-		log.debug("${get_APP_NAME()}>About to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
-		send ("About to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
+		log.debug("${get_APP_NAME()}>for $ecobee, about to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
+		send ("For $ecobee, about to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
 	}    	
 	if (state?.timestamp == dateInLocalTime && nextComponent.position >=MAX_POSITION) {
 		return // the monthly stats are already generated 
@@ -269,13 +269,15 @@ void generateStats() {
 
 	component = 'auxHeat1'
 	if ((mode in ['auto','heat','off']) && (nextComponent?.position <= 1)) { 
-		// Get the auxHeat1's runtime for startDate-endDate period
-
+		if (detailedNotif) {
+			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+			send ("For ${ecobee}'s ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		}        
 		generateRuntimeReport(component,aMonthAgo, endDate,'monthly') // generate stats for the last 30 days
 		runtimeTotalAvgMonthly = (ecobee.currentAuxHeat1RuntimeAvgMonthly)? ecobee.currentAuxHeat1RuntimeAvgMonthly.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
 		if (runtimeTotalAvgMonthly) {
-			send "generated ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
+			send "${ecobee} ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
 		}     
 	}
     
@@ -284,27 +286,29 @@ void generateStats() {
     
 	component = 'auxHeat2'
 	if ((mode in ['auto','heat', 'off']) && (heatStages >1) && (nextComponent.position <= 2)) { 
-    
-//	Get the auxHeat2's runtime for startDate-endDate period
-        
+		if (detailedNotif) {
+			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+			send ("For ${ecobee}'s ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		}        
 		generateRuntimeReport(component,aMonthAgo, endDate,'monthly') // generate stats for the last 30 days
 		runtimeTotalAvgMonthly = (ecobee.currentAuxHeat2RuntimeAvgMonthly)? ecobee.currentAuxHeat2RuntimeAvgMonthly.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
 		if (runtimeTotalAvgMonthly) {
-			send "generated ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
+			send "${ecobee} ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
 		}     
 	}     
 
 	component = 'auxHeat3'
 	if ((mode in ['auto','heat', 'off']) && (heatStages >2) && (nextComponent.position <= 3)) { 
-    
-//	Get the auxHeat3's runtime for startDate-endDate period
- 	
+		if (detailedNotif) {
+			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+			send ("For ${ecobee}'s ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		}        
 		generateRuntimeReport(component,aMonthAgo, endDate,'monthly') // generate stats for the last 30 days
 		runtimeTotalAvgMonthly = (ecobee.currentAuxHeat3RuntimeAvgMonthly)? ecobee.currentAuxHeat3RuntimeAvgMonthly.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
 		if (runtimeTotalAvgMonthly) {
-			send "generated ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
+			send "${ecobee} ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
 		}     
 	}     
 
@@ -316,20 +320,28 @@ void generateStats() {
 //	Get the compCool2's runtime for startDate-endDate period
 	component = 'compCool2'
 	if ((mode in ['auto','cool', 'off']) && (coolStages >1) && (nextComponent.position <= 4)) {
+		if (detailedNotif) {
+			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+			send ("For ${ecobee}'s ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		}        
 		generateRuntimeReport(component,aMonthAgo, endDate,'monthly') // generate stats for the last 30 days
 		runtimeTotalAvgMonthly = (ecobee.currentCompCool2RuntimeAvgMonthly)? ecobee.currentCompCool2RuntimeAvgMonthly.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
 		if (runtimeTotalAvgMonthly) {
-			send "generated ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
+			send "${ecobee} ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
 		}     
 	} 
 	component = 'compCool1'
 	if ((mode in ['auto','cool', 'off']) && (nextComponent.position <= 5)) {
+		if (detailedNotif) {
+			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+			send ("For ${ecobee}'s ${component}, about to call generateRuntimeReport with aMonthAgo in UTC =${aMonthAgo.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		}        
 		generateRuntimeReport(component,aMonthAgo, endDate,'monthly') // generate stats for the last 30 days
 		runtimeTotalAvgMonthly = (ecobee.currentCompCool1RuntimeAvgMonthly)? ecobee.currentCompCool1RuntimeAvgMonthly.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
 		if (runtimeTotalAvgMonthly) {
-			send "generated ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
+			send "${ecobee} ${component}'s average monthly runtime stats=${runtimeTotalAvgMonthly} minutes since ${String.format('%tF', aMonthAgo)}", settings.askAlexaFlag
 		}     
 	}        
         
