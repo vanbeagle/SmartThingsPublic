@@ -350,7 +350,7 @@ void generateStats() {
 	nextComponent  = get_nextComponentStats(component) // get nextComponentToBeProcessed	
 	int endPosition= (mode=='heat') ? ((heatStages>2) ? 4 : (heatStages>1)? 3:2) :MAX_POSITION     
 	if (nextComponent.position >=endPosition) {
-		send "for $ecobee, generated all ${ecobee}'s monthly stats since ${String.format('%tF', aMonthAgo)}"
+		send "generated all ${ecobee}'s monthly stats since ${String.format('%tF', aMonthAgo)}"
 		unschedule(reRunIfNeeded) // No need to reschedule again as the stats are completed.
 		state?.timestamp = dateInLocalTime // save the date to avoid re-execution.
 	}
