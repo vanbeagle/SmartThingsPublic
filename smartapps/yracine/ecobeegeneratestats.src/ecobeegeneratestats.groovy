@@ -31,8 +31,8 @@ definition(
 
 preferences {
 	section("About") {
-		paragraph "${get_APP_NAME()}, the smartapp that generates daily & weekly runtime reports about your ecobee components"
-		paragraph "Version 2.2.6" 
+		paragraph "${get_APP_NAME()}, the smartapp that generates daily runtime reports about your ecobee components"
+		paragraph "Version 2.2.7" 
 		paragraph "If you like this smartapp, please support the developer via PayPal and click on the Paypal link below " 
 			href url: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=yracine%40yahoo%2ecom&lc=US&item_name=Maisons%20ecomatiq&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest",
 				title:"Paypal donation..."
@@ -227,13 +227,13 @@ private def get_nextComponentStats(component='') {
 	try {
 		nextInLine = components.getAt(component)
 	} catch (any) {
-		if (settings.trace) {
+		if (detailedNotif) {
 			log.debug "get_nextComponentStats>${component} not found"
 		}   
 		nextInLine=[position:1,next:'auxHeat1']        
 	}        
     
-	if (settings.trace) {
+	if (detailedNotif) {
 		log.debug "get_nextComponentStats>got ${component}'s next component from components table= ${nextInLine}"
 		send "got ${component}'s next component from components table= ${nextInLine}"
 	}

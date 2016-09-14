@@ -178,7 +178,7 @@ private def formatDate(dateString) {
 }
 
 private def get_nextComponentStats(component='') {
-	if (settings.trace) {
+	if (detailedNotif) {
 		log.debug "get_nextComponentStats>About to get ${component}'s next component from components table"
 		send "get_nextComponentStats,About to get ${component}'s next component from components table"
 	}
@@ -209,11 +209,11 @@ private def get_nextComponentStats(component='') {
 		nextInLine = components.getAt(component)
 	} catch (any) {
 		nextInLine=[position:1, next:'auxHeat1']
-		if (settings.trace) {
+		if (detailedNotif) {
 			log.debug "get_nextComponentStats>${component} not found, nextInLine=${nextInLine}"
 		}
 	}          
-	if (settings.trace) {
+	if (detailedNotif) {
 		log.debug "get_nextComponentStats>got ${component}'s next component from components table= ${nextInLine}"
 		send "get_nextComponentStats,got ${component}'s next component from components table= ${nextInLine}"
 	}
