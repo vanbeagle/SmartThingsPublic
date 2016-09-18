@@ -32,7 +32,7 @@ definition(
 preferences {
 	section("About") {
 		paragraph "${get_APP_NAME()}, the smartapp that generates monthly runtime reports about your ecobee components"
-		paragraph "Version 1.6.4" 
+		paragraph "Version 1.6.5" 
 		paragraph "If you like this smartapp, please support the developer via PayPal and click on the Paypal link below " 
 			href url: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=yracine%40yahoo%2ecom&lc=US&item_name=Maisons%20ecomatiq&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest",
 				title:"Paypal donation..."
@@ -240,12 +240,12 @@ void generateStats() {
 	if (detailedNotif) {    
 		log.debug("${get_APP_NAME()}>for $ecobee, about to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
 	}    	
-//	if (state?.timestamp == dateInLocalTime && nextComponent.position >=MAX_POSITION) {
-//		return // the monthly stats are already generated 
-//	} else {    	
+	if (state?.timestamp == dateInLocalTime && nextComponent.position >=MAX_POSITION) {
+		return // the monthly stats are already generated 
+	} else {    	
 		// schedule a rerun till the stats are generated properly
 		schedule("0 0/${delay} * * * ?", reRunIfNeeded)
-//	}    	
+	}    	
     
 	String timezone = new Date().format("zzz", location.timeZone)
 	String dateAtMidnight = dateInLocalTime + " 00:00 " + timezone    
