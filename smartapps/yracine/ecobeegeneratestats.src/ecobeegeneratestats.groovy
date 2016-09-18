@@ -32,7 +32,7 @@ definition(
 preferences {
 	section("About") {
 		paragraph "${get_APP_NAME()}, the smartapp that generates daily runtime reports about your ecobee components"
-		paragraph "Version 2.3.3" 
+		paragraph "Version 2.3.5" 
 		paragraph "If you like this smartapp, please support the developer via PayPal and click on the Paypal link below " 
 			href url: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=yracine%40yahoo%2ecom&lc=US&item_name=Maisons%20ecomatiq&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest",
 				title:"Paypal donation..."
@@ -116,9 +116,9 @@ def rescheduleIfNeeded(evt) {
 	}
 	if (((state?.poll["last"]?:0) + (delay * 60000) < currentTime) && canSchedule()) {
 		log.info "rescheduleIfNeeded>scheduling dailyRun in ${delay} minutes.."
-//		generate the stats every day at 0:05 
+//		generate the stats every day at 4:30
 
-		schedule("0 5 0 * * ?", dailyRun)    
+		schedule("0 30 4 * * ?", dailyRun)    
 	}
     
 	// Update rescheduled state
@@ -143,7 +143,7 @@ void dailyRun() {
     
 	if (((state?.poll["rescheduled"]?:0) + (delay * 60000)) < now()) {
 		log.info "takeAction>scheduling rescheduleIfNeeded() in ${delay} minutes.."
-		schedule("0 5 0 * * ?", rescheduleIfNeeded)    
+		schedule("0 30 4 * * ?", rescheduleIfNeeded)    
 		// Update rescheduled state
 		state?.poll["rescheduled"] = now()
 	}
@@ -153,7 +153,6 @@ void dailyRun() {
 	settings.givenEndTime=null
 	if (detailedNotif) {    
 		log.debug("dailyRun>for $ecobee, about to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
-		send("for $ecobee, about to call generateStats() with settings.givenEndDate=${settings.givenEndDate}")
 	}    
 	generateStats()
     
@@ -162,7 +161,6 @@ void dailyRun() {
 void reRunIfNeeded() {
 	if (detailedNotif) {    
 		log.debug("reRunIfNeeded>About to call generateStats() with state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
-		send("About to call generateStats() with state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
 	}    
 	generateStats()
    
@@ -235,7 +233,6 @@ private def get_nextComponentStats(component='') {
     
 	if (detailedNotif) {
 		log.debug "get_nextComponentStats>got ${component}'s next component from components table= ${nextInLine}"
-		send "got ${component}'s next component from components table= ${nextInLine}"
 	}
 	return nextInLine
 		            
@@ -254,14 +251,12 @@ void generateStats() {
     
 		if (detailedNotif) {    
 			log.debug("${get_APP_NAME()}>Exception $e while unscheduling reRunIfNeeded")
-			send("Exception $e while unscheduling reRunIfNeeded")
 		}    	
 	}    
 	def component=state?.componentAlreadyProcessed    // use logic to restart the batch process if needed due to ST rate limiting
 	def nextComponent  = get_nextComponentStats(component) // get next Component To Be Processed	
 	if (detailedNotif) {    
 		log.debug("${get_APP_NAME()}>for $ecobee, about to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
-		send("for $ecobee, about to process nextComponent=${nextComponent}, state.componentAlreadyProcessed=${state?.componentAlreadyProcessed}")
 	}    	
 	if (state?.timestamp == dateInLocalTime && nextComponent.position >=MAX_POSITION) {
 		return // the daily stats are already generated 
@@ -275,47 +270,36 @@ void generateStats() {
 	String dateAtMidnight = dateInLocalTime + " 00:00 " + timezone    
 	if (detailedNotif) {    
 		log.debug("${get_APP_NAME()}>date at Midnight= ${dateAtMidnight}")
-		send("date at Midnight= ${dateAtMidnight}")
 	}    	
 	Date endDate = formatDate(dateAtMidnight) 
 	Date startDate = endDate -1
 	Date yesterday = startDate-1    
 	Date aWeekAgo= endDate -7    
         
-	def givenStartDate = (settings.givenStartDate) ?: startDate.format("yyyy-MM-dd", location.timeZone)
-	def givenStartTime=(settings.givenStartTime) ?:"00:00"    
-	def dateTime = givenStartDate + " " + givenStartTime + " " + timezone
+	def reportStartDate = (settings.givenStartDate) ?: startDate.format("yyyy-MM-dd", location.timeZone)
+	def reportStartTime=(settings.givenStartTime) ?:"00:00"    
+	def dateTime = reportStartDate + " " + reportStartTime + " " + timezone
 	startDate = formatDate(dateTime)
 	if (detailedNotif) {
 		log.debug("${get_APP_NAME()}>start dateTime = ${dateTime}, startDate in UTC = ${startDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		send("start dateTime = ${dateTime}, startDate in UTC = ${startDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
 	}    
-	def givenEndDate = (settings.givenEndDate) ?: endDate.format("yyyy-MM-dd", location.timeZone) 
-	def givenEndTime=(settings.givenEndTime) ?:"00:00"    
-	dateTime = givenEndDate + " " + givenEndTime + " " + timezone
+	def reportEndDate = (settings.givenEndDate) ?: endDate.format("yyyy-MM-dd", location.timeZone) 
+	def reportEndTime=(settings.givenEndTime) ?:"00:00"    
+	dateTime = reportEndDate + " " + reportEndTime + " " + timezone
 	endDate = formatDate(dateTime)
 	if (detailedNotif) {    
 		log.debug("${get_APP_NAME()}>end dateTime = ${dateTime}, endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		send("end dateTime = ${dateTime}, endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
 	}
     
     
 	// Get the auxHeat1's runtime for startDate-endDate period
 	component = 'auxHeat1'
 	if (nextComponent.position <= 1) { 
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,startDate, endDate)
 		runtimeTotalDaily = (ecobee.currentAuxHeat1RuntimeDaily) ? ecobee.currentAuxHeat1RuntimeDaily.toFloat().round(2):0
 		if (runtimeTotalDaily) {
 			send "${ecobee} ${component}'s runtime stats=${runtimeTotalDaily} minutes for ${String.format('%tF', startDate)}", settings.askAlexaFlag
 		}     
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
     
 		generateRuntimeReport(component,yesterday, startDate,'yesterday') // generate stats for yesterday
 		runtimeTotalYesterday = (ecobee.currentAuxHeat1RuntimeYesterday)? ecobee.currentAuxHeat1RuntimeYesterday.toFloat().round(2):0
@@ -332,19 +316,11 @@ void generateStats() {
     
 //	Get the auxHeat2's runtime for startDate-endDate period
  	
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,startDate, endDate)
 		runtimeTotalDaily = (ecobee.currentAuxHeat2RuntimeDaily)? ecobee.currentAuxHeat2RuntimeDaily.toFloat().round(2):0
 		if (runtimeTotalDaily) {
 			send "${ecobee} ${component}'s runtime stats=${runtimeTotalDaily} minutes for ${String.format('%tF', startDate)}", settings.askAlexaFlag
 		}     
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,yesterday, startDate,'yesterday') // generate stats for yesterday
 		runtimeTotalYesterday = (ecobee.currentAuxHeat2RuntimeYesterday)? ecobee.currentAuxHeat2RuntimeYesterday.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
@@ -358,19 +334,11 @@ void generateStats() {
     
 //	Get the auxHeat3's runtime for startDate-endDate period
  	
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,startDate, endDate)
 		runtimeTotalDaily = (ecobee.currentAuxHeat3RuntimeDaily)? ecobee.currentAuxHeat3RuntimeDaily.toFloat().round(2):0
 		if (runtimeTotalDaily) {
 			send "${ecobee} ${component}'s runtime stats=${runtimeTotalDaily} minutes for ${String.format('%tF', startDate)}", settings.askAlexaFlag
 		}     
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,yesterday, startDate,'yesterday') // generate stats for yesterday
 		runtimeTotalYesterday = (ecobee.currentAuxHeat3RuntimeYesterday)? ecobee.currentAuxHeat3RuntimeYesterday.toFloat().round(2):0
 		if (detailedNotif ) {
@@ -384,19 +352,11 @@ void generateStats() {
 	component = 'compCool1'
 
 	if (nextComponent.position <= 4) {
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,startDate, endDate)
 		runtimeTotalDaily = (ecobee.currentCompCool1RuntimeDaily)? ecobee.currentCompCool1RuntimeDaily.toFloat().round(2):0
 		if (runtimeTotalDaily) {
 			send "${ecobee} ${component}'s runtime stats=${runtimeTotalDaily} minutes for ${String.format('%tF', startDate)}", settings.askAlexaFlag
 		}     
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,yesterday, startDate,'yesterday') // generate stats for the day before
 		runtimeTotalYesterday = (ecobee.currentCompCool1RuntimeYesterday)? ecobee.currentCompCool1RuntimeYesterday.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
@@ -409,19 +369,11 @@ void generateStats() {
 
 	component = 'compCool2'
 	if (coolStages >1 && nextComponent.position <= 5) {
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,startDate, endDate)
 		runtimeTotalDaily = (ecobee.currentCompCool2RuntimeDaily)? ecobee.currentCompCool2RuntimeDaily.toFloat().round(2):0
 		if (runtimeTotalDaily) {
 			send "${ecobee} ${component}'s runtime stats=${runtimeTotalDaily} minutes for ${String.format('%tF', startDate)}", settings.askAlexaFlag
 		}     
-		if (detailedNotif) {
-			log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-			send("For ${ecobee} ${component}, about to call generateRuntimeReport with yesterday in UTC =${yesterday.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
-		}        
 		generateRuntimeReport(component,yesterday, startDate,'yesterday') // generate stats for the day before
 		runtimeTotalYesterday = (ecobee.currentCompCool2RuntimeYesterday)? ecobee.currentCompCool2RuntimeYesterday.toFloat().round(2):0
 		state?.componentAlreadyProcessed=component
@@ -489,13 +441,22 @@ void generateStats() {
 		send "generated ${ecobee}'s daily stats done for ${String.format('%tF', startDate)} - ${String.format('%tF', endDate)} period"
 		state?.timestamp = dateInLocalTime // save the local date to avoid re-execution    
 		unschedule(reRunIfNeeded) // No need to reschedule again as the stats are completed.
+		        
 	}
 	
 }
 
-private void generateRuntimeReport(component, startDate, endDate, frequence='daily') {
+void generateRuntimeReport(component, startDate, endDate, frequence='daily') {
 
+	if (detailedNotif) {
+		log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call getReportData with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		send("For ${ecobee} ${component}, about to call getReportData with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+	}        
 	ecobee.getReportData("", startDate, endDate, null, null, component,false)
+	if (detailedNotif) {
+		log.debug("${get_APP_NAME()}>For ${ecobee} ${component}, about to call generateRuntimeReportEvents with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+		send("For ${ecobee} ${component}, about to call generateRuntimeReportEvents with endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
+	}        
 	ecobee.generateReportRuntimeEvents(component, startDate,endDate, 0, null,frequence)
 
 }
