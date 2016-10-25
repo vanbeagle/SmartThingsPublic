@@ -76,8 +76,8 @@ preferences {
 
 def installed() {
 
-	ecobee.poll()
 	subscribe(app, appTouch)
+	takeAction()
 
 }
 
@@ -85,13 +85,16 @@ def installed() {
 def updated() {
 
 	unsubscribe()
-	ecobee.poll()
 	subscribe(app, appTouch)
+	takeAction()
 
 
 }
 
 def appTouch(evt) {
+	takeAction()
+}
+def takeAction() {    
 	log.debug "ecobeeManageVacation> about to take actions"
 	def minHeatTemp, minCoolTemp
 	def scale = getTemperatureScale()
@@ -117,12 +120,12 @@ def appTouch(evt) {
 		// You may want to change to ecobee.createVacation('serial number list',....) if you own EMS thermostat(s)
 
 		log.debug("About to call iterateCreateVacation for ${vacationName}")
-		ecobee.iterateCreateVacation('', vacationName, minCoolTemp, minHeatTemp, vacationStartDateTime,
+		ecobee.iterateCreateVacation(null, vacationName, minCoolTemp, minHeatTemp, vacationStartDateTime,
 			vacationEndDateTime)
 		send("ecobeeManageVacation> vacationName ${vacationName} created")
 	} else {
 
-		ecobee.iterateDeleteVacation('', vacationName)
+		ecobee.iterateDeleteVacation(null, vacationName)
 		send("ecobeeManageVacation> vacationName ${vacationName} deleted")
 
 	}
