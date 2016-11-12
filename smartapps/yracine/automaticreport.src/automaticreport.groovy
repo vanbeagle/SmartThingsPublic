@@ -115,7 +115,7 @@ private def generateReport() {
 	endDate = formatDate(dateTime)
 	log.debug("generateReport>end dateTime = ${dateTime}, endDate in UTC =${endDate.format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"))}")
 
-	automatic.getTrips("","", startDate,endDate, null, true)
+	automatic.getTrips("","T_76464e9758b4a032", null,null, null, true)
 
 	def currentTripList = automatic.currentTripsList
 	def tripFields =null   
@@ -180,6 +180,8 @@ private def generateReport() {
 			}
 		} /* end each vehicle Event */       
 	} /* end for each Trip  */
+    
+    
 }
 
 private def report_states_between_dates(eventType, startDate, endDate) {
