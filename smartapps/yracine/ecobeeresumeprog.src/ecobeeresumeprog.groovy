@@ -146,7 +146,7 @@ def changeMode(evt) {
 		log.debug "changeMode>location.mode= $location.mode, newMode=${newMode},foundMode=${foundMode}, not resuming program"
 		return			
 	}
-	message = "EcobeeResumeProg>${newMode} has just been triggered, about to take actions.."
+	def message = "EcobeeResumeProg>${newMode} has just been triggered, about to take actions.."
 	log.info message
 	send(message)
 	takeActions()
