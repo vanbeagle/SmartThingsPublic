@@ -32,7 +32,7 @@ definition(
 	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/ecobee@2x.png"
 )
 
-def get_APP_VERSION() {return "3.3.8"}
+def get_APP_VERSION() {return "3.3.9"}
 
 preferences {
 	page(name: "dashboardPage", title: "DashboardPage")
